@@ -36,10 +36,11 @@ int trace_getpid(struct pt_regs *ctx) {
     bpf_ringbuf_submit(event, 0);
 
     __u32 key = 0;
+    // bpf_ringbuf_query with BPF_RB_AVAIL_DATA flag - Retrieves the number of bytes in the ring buffer that have been written but not yet consumed
     __u64 available = bpf_ringbuf_query(&events, BPF_RB_AVAIL_DATA);
     int result = bpf_map_update_elem(&count_map, &key, &available, BPF_ANY);
     if (result != 0) {
-        bpf_printk("Failed to update Map  with new element\n");
+        bpf_printk("Failed to update Map with new element\n");
     }
 
     return 0;

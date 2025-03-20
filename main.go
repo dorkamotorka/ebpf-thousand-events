@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/cilium/ebpf/rlimit"
 	"github.com/cilium/ebpf/link"
@@ -55,6 +56,20 @@ func main() {
 	fmt.Println("Listening for getpid() syscalls... Press Ctrl+C to exit.")
 
 	go func() {
+		for {
+			var key uint32 = 0
+			var available uint64
+			if err := obj.CountMap.Lookup(&key, &available); err != nil {
+                        	log.Fatalf("Failed to lookup map: %v", err)
+                	}
+
+			fmt.Print("\033[H\033[J")
+			fmt.Printf("Ring Buffer has %d bytes of data available to be consumed.", available)
+			time.Sleep(100 * time.Millisecond)
+		}
+	}()
+
+	go func() {
 		var e event
 		for {
 			record, err := rb.Read()
@@ -62,7 +77,7 @@ func main() {
 				if err == ringbuf.ErrClosed {
 					return
 				}
-				log.Printf("Error reading ring buffer: %v", err)
+				//log.Printf("Error reading ring buffer: %v", err)
 				continue
 			}
 
@@ -72,7 +87,7 @@ func main() {
 				continue
 			}
 
-			fmt.Printf("PID: %d\n", e.PID)
+			//fmt.Printf("PID: %d\n", e.PID)
 		}
 	}()
 
